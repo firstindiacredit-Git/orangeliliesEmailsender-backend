@@ -45,6 +45,9 @@ transporter.verify(function(error, success) {
     }
 });
 
+app.get('/', (req, res) => {
+    res.send('Hello World');
+});
 // Email subscription endpoint
 app.post('/api/subscribe', async (req, res) => {
     try {
