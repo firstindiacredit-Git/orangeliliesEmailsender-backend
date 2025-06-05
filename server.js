@@ -115,6 +115,76 @@ app.post('/api/subscribe', async (req, res) => {
     }
 });
 
+// Contact form endpoint
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, subject, message } = req.body;
+        console.log('Received contact form submission:', { name, email, subject });
+
+        if (!name || !email || !subject || !message) {
+            console.log('Missing required fields in contact form');
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        // Send email to info@orangelilies.com
+        const mailOptions = {
+            from: `"Orange Lilies Contact Form" <${process.env.EMAIL_USER}>`,
+            to: 'info@orangelilies.com',
+            subject: `Contact Form: ${subject}`,
+            text: `New contact form submission:\n\nName: ${name}\nEmail: ${email}\nSubject: ${subject}\nMessage: ${message}`,
+            html: `
+                <h2>New Contact Form Submission</h2>
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Subject:</strong> ${subject}</p>
+                <p><strong>Message:</strong></p>
+                <p>${message}</p>
+                <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+            `
+        };
+
+        console.log('Attempting to send contact form email...');
+        await transporter.sendMail(mailOptions);
+        console.log('Contact form email sent successfully');
+
+        // Send confirmation email to the user
+        const confirmationMailOptions = {
+            from: `"Orange Lilies" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Thank you for contacting Orange Lilies',
+            html: `
+                <h2>Thank you for contacting Orange Lilies!</h2>
+                <p>Dear ${name},</p>
+                <p>We have received your message and will get back to you as soon as possible.</p>
+                <p>Here's a copy of your message:</p>
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <p><strong>Subject:</strong> ${subject}</p>
+                    <p><strong>Message:</strong></p>
+                    <p>${message}</p>
+                </div>
+                <p>Best regards,<br>The Orange Lilies Team</p>
+            `
+        };
+
+        console.log('Attempting to send confirmation email...');
+        await transporter.sendMail(confirmationMailOptions);
+        console.log('Confirmation email sent successfully');
+
+        res.status(200).json({ message: 'Message sent successfully' });
+    } catch (error) {
+        console.error('Detailed contact form error:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            command: error.command
+        });
+        res.status(500).json({ 
+            error: 'Failed to send message',
+            details: error.message 
+        });
+    }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.status(200).json({ 
